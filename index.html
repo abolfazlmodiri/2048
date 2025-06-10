@@ -1,18 +1,18 @@
 <!DOCTYPE html>
 <html lang="fa">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>بازی 2048 بنفش</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>بازی 2048</title>
   <style>
-    * { box-sizing: border-box; }
     body {
-      margin: 0;
       font-family: sans-serif;
-      background: #e3f2fd;
-      color: #ffffff;
-      direction: rtl;
+      background: #faf8ef;
+      color: #776e65;
       text-align: center;
+      direction: rtl;
+      margin: 0;
+      padding: 0;
     }
     .container {
       max-width: 400px;
@@ -20,8 +20,9 @@
       padding: 20px;
     }
     h1 {
-      margin: 0;
-      color: #6a1b9a;
+      margin: 10px;
+      font-size: 40px;
+      color: #776e65;
     }
     .score-board {
       display: flex;
@@ -30,7 +31,7 @@
       font-size: 16px;
     }
     .score, .highscore {
-      background: #9575cd;
+      background: #bbada0;
       color: #fff;
       padding: 10px;
       border-radius: 5px;
@@ -39,27 +40,27 @@
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 5px;
-      background: #7e57c2;
+      background: #bbada0;
       padding: 5px;
       border-radius: 10px;
     }
     .tile {
       width: 100%;
-      aspect-ratio: 1/1;
-      background: #d1c4e9;
+      aspect-ratio: 1;
+      background: #cdc1b4;
       border-radius: 5px;
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: bold;
       font-size: 24px;
-      color: #311b92;
+      color: #776e65;
     }
     button {
       margin-top: 10px;
       padding: 10px;
       font-size: 16px;
-      background: #6a1b9a;
+      background: #8f7a66;
       color: white;
       border: none;
       border-radius: 5px;
@@ -74,10 +75,11 @@
     .controls button {
       padding: 10px;
     }
-    @media (max-width: 500px) {
-      .tile {
-        font-size: 18px;
-      }
+    #game-over {
+      display: none;
+      margin-top: 20px;
+      font-size: 20px;
+      color: red;
     }
   </style>
 </head>
@@ -100,14 +102,17 @@
     </div>
 
     <button onclick="initBoard()">🔁 شروع دوباره</button>
+    <div id="game-over">شما باختید! بازی تا ۱۵ ثانیه دیگر ریست می‌شود...</div>
   </div>
 
   <script>
     let grid = [];
     let score = 0;
+    let gameOverShown = false;
     const board = document.getElementById("game-board");
     const scoreDisplay = document.getElementById("score");
     const highScoreDisplay = document.getElementById("highscore");
+    const gameOverDiv = document.getElementById("game-over");
 
     function updateBoard() {
       board.innerHTML = "";
@@ -115,8 +120,9 @@
         row.forEach(val => {
           const tile = document.createElement("div");
           tile.className = "tile";
-          tile.style.background = val === 0 ? "#d1c4e9" : "#b39ddb";
           tile.textContent = val === 0 ? "" : val;
+          tile.style.background = getTileColor(val);
+          tile.style.color = val <= 4 ? "#776e65" : "#f9f6f2";
           board.appendChild(tile);
         });
       });
@@ -124,6 +130,33 @@
       const high = +localStorage.getItem("highscore") || 0;
       if (score > high) localStorage.setItem("highscore", score);
       highScoreDisplay.textContent = localStorage.getItem("highscore") || 0;
+
+      if (!canMove() && !gameOverShown) {
+        gameOverShown = true;
+        gameOverDiv.style.display = "block";
+        setTimeout(() => {
+          gameOverDiv.style.display = "none";
+          initBoard();
+        }, 15000);
+      }
+    }
+
+    function getTileColor(val) {
+      const colors = {
+        0: "#cdc1b4",
+        2: "#eee4da",
+        4: "#ede0c8",
+        8: "#f2b179",
+        16: "#f59563",
+        32: "#f67c5f",
+        64: "#f65e3b",
+        128: "#edcf72",
+        256: "#edcc61",
+        512: "#edc850",
+        1024: "#edc53f",
+        2048: "#edc22e"
+      };
+      return colors[val] || "#3c3a32";
     }
 
     function addRandomTile() {
@@ -208,15 +241,26 @@
       }
     }
 
+    function canMove() {
+      for (let i = 0; i < 4; i++) {
+        for (let j = 0; j < 4; j++) {
+          if (grid[i][j] === 0) return true;
+          if (j < 3 && grid[i][j] === grid[i][j + 1]) return true;
+          if (i < 3 && grid[i][j] === grid[i + 1][j]) return true;
+        }
+      }
+      return false;
+    }
+
     function initBoard() {
       grid = Array(4).fill(null).map(() => Array(4).fill(0));
       score = 0;
+      gameOverShown = false;
       addRandomTile();
       addRandomTile();
       updateBoard();
     }
 
-    // پشتیبانی از کیبورد
     document.addEventListener("keydown", e => {
       switch (e.key) {
         case "ArrowLeft": moveLeft(); break;
@@ -226,7 +270,7 @@
       }
     });
 
-    // لمس برای موبایل
+    // لمس موبایل
     let startX, startY;
     document.addEventListener("touchstart", e => {
       startX = e.touches[0].clientX;
@@ -245,13 +289,6 @@
         else if (dy < -20) moveUp();
       }
     }, { passive: true });
-
-    // جلوگیری از رفرش با کشیدن
-    document.addEventListener("touchmove", e => {
-      if (e.touches.length > 1 || (startY && e.touches[0].clientY - startY > 50)) {
-        e.preventDefault();
-      }
-    }, { passive: false });
 
     initBoard();
   </script>
