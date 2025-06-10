@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>بازی 2048</title>
+  <title>بازی 2048 بنفش</title>
   <style>
     * { box-sizing: border-box; }
     body {
       margin: 0;
       font-family: sans-serif;
-      background: #faf8ef;
-      color: #776e65;
+      background: #e3f2fd;
+      color: #ffffff;
       direction: rtl;
       text-align: center;
     }
@@ -21,6 +21,7 @@
     }
     h1 {
       margin: 0;
+      color: #6a1b9a;
     }
     .score-board {
       display: flex;
@@ -29,8 +30,8 @@
       font-size: 16px;
     }
     .score, .highscore {
-      background: #bbada0;
-      color: white;
+      background: #9575cd;
+      color: #fff;
       padding: 10px;
       border-radius: 5px;
     }
@@ -38,26 +39,27 @@
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 5px;
-      background: #bbada0;
+      background: #7e57c2;
       padding: 5px;
       border-radius: 10px;
     }
     .tile {
       width: 100%;
       aspect-ratio: 1/1;
-      background: #cdc1b4;
+      background: #d1c4e9;
       border-radius: 5px;
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: bold;
       font-size: 24px;
+      color: #311b92;
     }
     button {
       margin-top: 10px;
       padding: 10px;
       font-size: 16px;
-      background: #8f7a66;
+      background: #6a1b9a;
       color: white;
       border: none;
       border-radius: 5px;
@@ -107,22 +109,13 @@
     const scoreDisplay = document.getElementById("score");
     const highScoreDisplay = document.getElementById("highscore");
 
-    function getTileColor(val) {
-      const colors = {
-        0: "#cdc1b4", 2: "#eee4da", 4: "#ede0c8", 8: "#f2b179",
-        16: "#f59563", 32: "#f67c5f", 64: "#f65e3b", 128: "#edcf72",
-        256: "#edcc61", 512: "#edc850", 1024: "#edc53f", 2048: "#edc22e"
-      };
-      return colors[val] || "#3c3a32";
-    }
-
     function updateBoard() {
       board.innerHTML = "";
       grid.forEach(row => {
         row.forEach(val => {
           const tile = document.createElement("div");
           tile.className = "tile";
-          tile.style.background = getTileColor(val);
+          tile.style.background = val === 0 ? "#d1c4e9" : "#b39ddb";
           tile.textContent = val === 0 ? "" : val;
           board.appendChild(tile);
         });
@@ -233,7 +226,7 @@
       }
     });
 
-    // پشتیبانی از لمس
+    // لمس برای موبایل
     let startX, startY;
     document.addEventListener("touchstart", e => {
       startX = e.touches[0].clientX;
@@ -253,7 +246,7 @@
       }
     }, { passive: true });
 
-    // جلوگیری از کشیدن پایین (refresh)
+    // جلوگیری از رفرش با کشیدن
     document.addEventListener("touchmove", e => {
       if (e.touches.length > 1 || (startY && e.touches[0].clientY - startY > 50)) {
         e.preventDefault();
