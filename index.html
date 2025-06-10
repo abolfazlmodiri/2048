@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>بازی 2048</title>
+  <style>
+    body {
+      font-family: Tahoma, sans-serif;
+      background: #faf8ef;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+    h1 {
+      font-size: 48px;
+      margin: 20px 0;
+    }
+    #game {
+      display: grid;
+      grid-template-columns: repeat(4, 100px);
+      grid-template-rows: repeat(4, 100px);
+      gap: 10px;
+      justify-content: center;
+      margin: 0 auto;
+      background: #bbada0;
+      padding: 10px;
+      border-radius: 10px;
+      width: fit-content;
+    }
+    .cell {
+      background: #cdc1b4;
+      font-size: 30px;
+      font-weight: bold;
+      line-height: 100px;
+      text-align: center;
+      border-radius: 5px;
+    }
+    .cell[data-value="2"]    { background: #eee4da; color: #776e65; }
+    .cell[data-value="4"]    { background: #ede0c8; color: #776e65; }
+    .cell[data-value="8"]    { background: #f2b179; color: white; }
+    .cell[data-value="16"]   { background: #f59563; color: white; }
+    .cell[data-value="32"]   { background: #f67c5f; color: white; }
+    .cell[data-value="64"]   { background: #f65e3b; color: white; }
+    .cell[data-value="128"]  { background: #edcf72; color: white; }
+    .cell[data-value="256"]  { background: #edcc61; color: white; }
+    .cell[data-value="512"]  { background: #edc850; color: white; }
+    .cell[data-value="1024"] { background: #edc53f; color: white; }
+    .cell[data-value="2048"] { background: #edc22e; color: white; }
+  </style>
+</head>
+<body>
+  <h1>بازی 2048</h1>
+  <div id="game"></div>
+
+  <script>
+    const gameSize = 4;
+    const game = document.getElementById('game');
+    let grid = [];
+
+    function createGrid() {
+      game.innerHTML = '';
+      grid = [];
+      for (let i = 0; i < gameSize; i++) {
+        grid[i] = [];
+        for (let j = 0; j < gameSize; j++) {
+          const cell = document.createElement('div');
+          cell.className = 'cell';
+          cell.dataset.value = '';
+          game.appendChild(cell);
+          grid[i][j] = 0;
+        }
+      }
+    }
+
+    function drawGrid() {
+      const cells = document.querySelectorAll('.cell');
+      cells.forEach((cell, index) => {
+        const row = Math.floor(index / gameSize);
+        const col = index % gameSize;
+        const value = grid[row][col];
+        cell.textContent = value === 0 ? '' : value;
+        cell.dataset.value = value;
+      });
+    }
+
+    function getEmptyCells() {
+      const empty = [];
+      for (let i = 0; i < gameSize; i++) {
+        for (let j = 0; j < gameSize; j++) {
+          if (grid[i][j] === 0) {
+            empty.push({ i, j });
+          }
+        }
+      }
+      return empty;
+    }
+
+    function spawnTile() {
+      const empty = getEmptyCells();
+      if (empty.length === 0) return;
+      const { i, j } = empty[Math.floor(Math.random() * empty.length)];
+      grid[i][j] = Math.random() < 0.9 ? 2 : 4;
+    }
+
+    function slide(row) {
+      const newRow = row.filter(val => val !== 0);
+      for (let i = 0; i < newRow.length - 1; i++) {
+        if (newRow[i] === newRow[i + 1]) {
+          newRow[i] *= 2;
+          newRow[i + 1] = 0;
+        }
+      }
+      return newRow.filter(val => val !== 0).concat(Array(gameSize).fill(0)).slice(0, gameSize);
+    }
+
+    function rotateGridClockwise() {
+      const newGrid = Array.from({ length: gameSize }, () => Array(gameSize).fill(0));
+      for (let i = 0; i < gameSize; i++) {
+        for (let j = 0; j < gameSize; j++) {
+          newGrid[j][gameSize - 1 - i] = grid[i][j];
+        }
+      }
+      grid = newGrid;
+    }
+
+    function move(direction) {
+      let moved = false;
+
+      // Rotate grid to make movement easier
+      const rotationMap = {
+        ArrowUp: 0,
+        ArrowRight: 1,
+        ArrowDown: 2,
+        ArrowLeft: 3
+      };
+
+      const times = rotationMap[direction];
+      for (let i = 0; i < times; i++) rotateGridClockwise();
+
+      for (let i = 0; i < gameSize; i++) {
+        const original = [...grid[i]];
+        grid[i] = slide(grid[i]);
+        if (grid[i].toString() !== original.toString()) moved = true;
+      }
+
+      // Rotate back
+      for (let i = 0; i < (4 - times) % 4; i++) rotateGridClockwise();
+
+      if (moved) {
+        spawnTile();
+        drawGrid();
+      }
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        move(e.key);
+      }
+    });
+
+    function startGame() {
+      createGrid();
+      spawnTile();
+      spawnTile();
+      drawGrid();
+    }
+
+    startGame();
+  </script>
+</body>
+</html>
